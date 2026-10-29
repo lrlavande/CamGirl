@@ -189,6 +189,11 @@ document.getElementById('start').onclick=async()=>{
   }catch(err){msg.textContent='Oups : '+err.message;setStatus('Erreur : '+err.message)}
 };
 
+if(new URLSearchParams(location.search).has('obs')){
+  document.body.classList.add('clean');
+  document.getElementById('start').click();
+}
+
 document.getElementById('calib').onclick=()=>{
   if(!running){setStatus("Démarre la caméra d'abord");return}
   calibBuf={n:0,sum:{},until:performance.now()+1500};
@@ -251,10 +256,7 @@ function drawMeme(im,a,W,H){
   ctx.save();
   ctx.globalAlpha=clamp(a*1.3);
   ctx.translate(cx,cy);ctx.scale(pop,pop);ctx.rotate(-.04);
-  const b=Math.max(4,H*.008),rad=H*.025;
-  ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=H*.03;
-  ctx.fillStyle='#fff';rr(-w/2-b,-h/2-b,w+2*b,h+2*b,rad+b);ctx.fill();
-  ctx.shadowColor='transparent';
+  const rad=H*.025;
   rr(-w/2,-h/2,w,h,rad);ctx.clip();
   ctx.drawImage(im,-w/2,-h/2,w,h);
   ctx.restore();
