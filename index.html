@@ -179,15 +179,25 @@ async function startCam(deviceId){
 }
 camSel.onchange=()=>{store.set('cam',camSel.value);startCam(camSel.value).catch(err=>setStatus('Caméra indisponible : '+err.message))};
 
-document.getElementById('start').onclick=async()=>{
+let retryT=null;
+async function demarrer(){
+  clearTimeout(retryT);
   try{
-    msg.textContent='Démarrage…';
+    msg.style.display='flex';msg.textContent='Démarrage…';
     await startCam(store.get('cam',null)||undefined).catch(()=>startCam());
     if(!landmarker)await initModel();
     msg.style.display='none';setStatus("C'est parti ! Fais des têtes");
     if(!running){running=true;requestAnimationFrame(loop)}
-  }catch(err){msg.textContent='Oups : '+err.message;setStatus('Erreur : '+err.message)}
-};
+  }catch(err){
+    const busy=err&&(err.name==='NotReadableError'||err.name==='AbortError'||/video source/i.test(err.message));
+    if(busy){
+      msg.textContent='Caméra occupée par une autre appli… je réessaie toute seule';
+      setStatus('Caméra occupée, nouvel essai dans 3 secondes');
+      retryT=setTimeout(demarrer,3000);
+    }else{msg.textContent='Oups : '+err.message;setStatus('Erreur : '+err.message)}
+  }
+}
+document.getElementById('start').onclick=demarrer;
 
 if(new URLSearchParams(location.search).has('obs')){
   document.body.classList.add('clean');
